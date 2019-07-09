@@ -1,0 +1,9 @@
+# Maven
+target/
+
+# HPI
+work/
+
+# IDEA
+.idea/
+*.iml
