@@ -19,21 +19,19 @@
 
   <name>Strict Crumb Issuer Plugin</name>
   <description>A configurable CSRF crumb issuer with stricter rules</description>
-  <!--<url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>-->
-
-  <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
+  <url>https://wiki.jenkins.io/display/JENKINS/Strict+Crumb+Issuer+Plugin</url>
 
   <licenses>
     <license>
       <name>MIT License</name>
-      <url>http://opensource.org/licenses/MIT</url>
+      <url>https://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <tag>HEAD</tag>
   </scm>
 
