@@ -29,19 +29,19 @@ THE SOFTWARE.
 
     <f:advanced>
         <f:entry title="" field="checkSessionMatch">
-            <f:checkbox checked="${instance.isCheckingSessionMatch()}" default="true" title="${%checkSessionId}"/>
+            <f:checkbox checked="${instance.isCheckSessionMatch()}" default="true" title="${%checkSessionId}"/>
         </f:entry>
         <f:entry title="" field="xorMasking">
             <f:checkbox checked="${instance.isXorMasking()}" default="true" title="${%xorMasking}" />
         </f:entry>
         <f:entry title="" field="checkClientIP">
-            <f:checkbox checked="${instance.isCheckingClientIP()}" default="false" title="${%checkClientIp}" />
+            <f:checkbox checked="${instance.isCheckClientIP()}" default="false" title="${%checkClientIp}" />
         </f:entry>
         <f:entry title="" field="checkSameSource">
-            <f:checkbox checked="${instance.isCheckingSameSource()}" default="false" title="${%checkSameSource}" />
+            <f:checkbox checked="${instance.isCheckSameSource()}" default="false" title="${%checkSameSource}" />
         </f:entry>
         <f:entry title="" field="checkOnlyLocalPath">
-            <f:checkbox checked="${instance.isCheckingOnlyLocalPath()}" default="false" title="${%checkOnlyLocalPath}" />
+            <f:checkbox checked="${instance.isCheckOnlyLocalPath()}" default="false" title="${%checkOnlyLocalPath}" />
         </f:entry>
     </f:advanced>
 </j:jelly>

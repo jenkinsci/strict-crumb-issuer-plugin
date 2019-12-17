@@ -433,24 +433,24 @@ public class StrictCrumbIssuerTest {
         wc.login("foo");
 
         configureIssuerUsingWebUI(wc, true, null, null, null, null, null);
-        assertEquals(true, currentIssuer().isCheckingClientIP());
+        assertEquals(true, currentIssuer().isCheckClientIP());
         configureIssuerUsingWebUI(wc, false, null, null, null, null, null);
-        assertEquals(false, currentIssuer().isCheckingClientIP());
+        assertEquals(false, currentIssuer().isCheckClientIP());
 
         configureIssuerUsingWebUI(wc, null, true, null, null, null, null);
-        assertEquals(true, currentIssuer().isCheckingSameSource());
+        assertEquals(true, currentIssuer().isCheckSameSource());
         configureIssuerUsingWebUI(wc, null, false, null, null, null, null);
-        assertEquals(false, currentIssuer().isCheckingSameSource());
+        assertEquals(false, currentIssuer().isCheckSameSource());
 
         configureIssuerUsingWebUI(wc, null, null, true, null, null, null);
-        assertEquals(true, currentIssuer().isCheckingOnlyLocalPath());
+        assertEquals(true, currentIssuer().isCheckOnlyLocalPath());
         configureIssuerUsingWebUI(wc, null, null, false, null, null, null);
-        assertEquals(false, currentIssuer().isCheckingOnlyLocalPath());
+        assertEquals(false, currentIssuer().isCheckOnlyLocalPath());
 
         configureIssuerUsingWebUI(wc, null, null, null, true, null, null);
-        assertEquals(true, currentIssuer().isCheckingSessionMatch());
+        assertEquals(true, currentIssuer().isCheckSessionMatch());
         configureIssuerUsingWebUI(wc, null, null, null, false, null, null);
-        assertEquals(false, currentIssuer().isCheckingSessionMatch());
+        assertEquals(false, currentIssuer().isCheckSessionMatch());
 
         configureIssuerUsingWebUI(wc, null, null, null, null, null, true);
         assertEquals(true, currentIssuer().isXorMasking());
