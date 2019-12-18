@@ -179,14 +179,14 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         this.initMessageDigest();
     }
 
-    private synchronized Object readResolve() {
+    private Object readResolve() {
         this.ensureHoursValidIsInBoundaries();
         this.initMessageDigest();
 
         return this;
     }
 
-    private void initMessageDigest(){
+    private synchronized void initMessageDigest(){
         try {
             this.md = MessageDigest.getInstance(MD_NAME);
         } catch (NoSuchAlgorithmException e) {
