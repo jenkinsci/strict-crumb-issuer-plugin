@@ -19,7 +19,7 @@
 
   <name>Strict Crumb Issuer Plugin</name>
   <description>A configurable CSRF crumb issuer with stricter rules</description>
-  <url>https://wiki.jenkins.io/display/JENKINS/Strict+Crumb+Issuer+Plugin</url>
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
   <licenses>
     <license>
@@ -52,12 +52,12 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-      <version>2.8.9</version>
+      <version>2.28.2</version>
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
-      <version>1.3</version>
+      <version>2.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
