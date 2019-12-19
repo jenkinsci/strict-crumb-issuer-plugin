@@ -26,17 +26,19 @@ package org.jenkinsci.plugins.strictcrumbissuer;
 import com.google.common.net.HttpHeaders;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
+import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.model.ModelObject;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.security.csrf.CrumbIssuerDescriptor;
 import jenkins.model.Jenkins;
 import jenkins.security.HexStringConfidentialKey;
-import jenkins.util.SystemProperties;
 import net.sf.json.JSONObject;
 import org.acegisecurity.Authentication;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -169,20 +171,22 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         this.xorMasking = xorMasking;
     }
 
+    // only set public for JCasC as they do not currently support private methods for PostConstruct
+    @Restricted(NoExternalUse.class)
     @PostConstruct
-    private void setup(){
+    public void setup(){
         this.ensureHoursValidIsInBoundaries();
         this.initMessageDigest();
     }
 
-    private synchronized Object readResolve() {
+    private Object readResolve() {
         this.ensureHoursValidIsInBoundaries();
         this.initMessageDigest();
 
         return this;
     }
 
-    private void initMessageDigest(){
+    private synchronized void initMessageDigest(){
         try {
             this.md = MessageDigest.getInstance(MD_NAME);
         } catch (NoSuchAlgorithmException e) {
@@ -202,28 +206,68 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         }
     }
 
+    /**
+     * @deprecated name was changed for JCasC, please use isCheckClientIP instead
+     */
+    @Deprecated
+    @RestrictedSince("2.1.0")
+    @Restricted(NoExternalUse.class)
     public boolean isCheckingClientIP() {
         return this.checkClientIP;
     }
 
+    /**
+     * @deprecated name was changed for JCasC, please use isCheckSameSource instead
+     */
+    @Deprecated
+    @RestrictedSince("2.1.0")
+    @Restricted(NoExternalUse.class)
     public boolean isCheckingSameSource() {
         return this.checkSameSource;
     }
 
+    /**
+     * @deprecated name was changed for JCasC, please use isCheckOnlyLocalPath instead
+     */
+    @Deprecated
+    @RestrictedSince("2.1.0")
+    @Restricted(NoExternalUse.class)
     public boolean isCheckingOnlyLocalPath() {
         return this.checkOnlyLocalPath;
     }
 
+    /**
+     * @deprecated name was changed for JCasC, please use isCheckSessionMatch instead
+     */
+    @Deprecated
+    @RestrictedSince("2.1.0")
+    @Restricted(NoExternalUse.class)
     public boolean isCheckingSessionMatch() {
         return this.checkSessionMatch;
     }
 
+    public boolean isCheckClientIP() {
+        return this.checkClientIP;
+    }
+
+    public boolean isCheckSameSource() {
+        return this.checkSameSource;
+    }
+
+    public boolean isCheckOnlyLocalPath() {
+        return this.checkOnlyLocalPath;
+    }
+
+    public boolean isCheckSessionMatch() {
+        return this.checkSessionMatch;
+    }
+
     public int getHoursValid() {
-        return hoursValid;
+        return this.hoursValid;
     }
 
     public boolean isXorMasking() {
-        return xorMasking;
+        return this.xorMasking;
     }
 
     @Override
@@ -298,8 +342,8 @@ public class StrictCrumbIssuer extends CrumbIssuer {
     }
 
     private @CheckForNull String urlForCreation(@Nonnull HttpServletRequest req){
-        if(isCheckingSameSource()){
-            if(isCheckingOnlyLocalPath()){
+        if(isCheckSameSource()){
+            if(isCheckOnlyLocalPath()){
                 String contextPath = req.getContextPath();
                 String requestURI = req.getRequestURI();
                 if (!requestURI.startsWith(contextPath)) {
@@ -330,14 +374,14 @@ public class StrictCrumbIssuer extends CrumbIssuer {
     }
 
     private @CheckForNull String urlForValidation(@Nonnull HttpServletRequest req){
-        if(isCheckingSameSource()){
+        if(isCheckSameSource()){
             String referer = req.getHeader(HttpHeaders.REFERER);
             if(referer == null){
                 LOGGER.log(Level.WARNING, "No referer present in the request, perhaps it is better to check only local path");
                 return null;
             }
 
-            if(isCheckingOnlyLocalPath()){
+            if(isCheckOnlyLocalPath()){
                 URL url;
                 try {
                     url = new URL(referer);
@@ -371,7 +415,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         builder.append(a.getName());
         builder.append(';');
 
-        if (isCheckingClientIP()) {
+        if (isCheckClientIP()) {
             builder.append(getClientIP(req));
             builder.append(';');
         }
@@ -381,7 +425,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
             builder.append(';');
         }
 
-        if (isCheckingSessionMatch()) {
+        if (isCheckSessionMatch()) {
             builder.append(req.getSession().getId());
             builder.append(';');
         }
