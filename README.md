@@ -8,7 +8,7 @@ The Strict Crumb Issuer plugin is an extended version of the Default Crumb Issue
 It provides advanced options of configuration.
 
 It's strongly recommended to use a Crumb Issuer (this one or the embedded one), 
-otherwise your instance will not be protected against [CSRF attacks](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29).
+otherwise your instance will not be protected against [CSRF attacks](https://owasp.org/www-community/attacks/csrf).
 
 ## Screenshots
 
