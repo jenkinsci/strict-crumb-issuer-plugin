@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.strictcrumbissuer;
 
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -163,7 +164,9 @@ public class StrictCrumbIssuerTest {
             j.submit(page2.getFormByName("config"));
             fail();
         } catch (FailingHttpStatusCodeException e) {
-            assertTrue(e.getMessage().contains("No valid crumb"));
+            WebResponse response = e.getResponse();
+            String responseBody = response.getContentAsString();
+            assertTrue(responseBody.contains("No valid crumb"));
         }
 
         // same url, second hit
@@ -184,7 +187,9 @@ public class StrictCrumbIssuerTest {
             j.submit(page3.getFormByName("config"));
             fail();
         } catch (FailingHttpStatusCodeException e) {
-            assertTrue(e.getMessage().contains("No valid crumb"));
+            WebResponse response = e.getResponse();
+            String responseBody = response.getContentAsString();
+            assertTrue(responseBody.contains("No valid crumb"));
         }
     }
 
@@ -222,7 +227,9 @@ public class StrictCrumbIssuerTest {
             j.submit(page3.getFormByName("config"));
             fail();
         } catch (FailingHttpStatusCodeException e) {
-            assertTrue(e.getMessage().contains("No valid crumb"));
+            WebResponse response = e.getResponse();
+            String responseBody = response.getContentAsString();
+            assertTrue(responseBody.contains("No valid crumb"));
         }
     }
 
@@ -374,7 +381,9 @@ public class StrictCrumbIssuerTest {
             j.submit(fooPage.getFormByName("config"));
             fail();
         } catch (FailingHttpStatusCodeException e) {
-            assertTrue(e.getMessage().contains("No valid crumb"));
+            WebResponse response = e.getResponse();
+            String responseBody = response.getContentAsString();
+            assertTrue(responseBody.contains("No valid crumb"));
         }
     }
 
@@ -417,7 +426,9 @@ public class StrictCrumbIssuerTest {
                 j.submit(p.getFormByName("config"));
                 fail();
             } catch (FailingHttpStatusCodeException e) {
-                assertTrue(e.getMessage().contains("No valid crumb"));
+                WebResponse response = e.getResponse();
+                String responseBody = response.getContentAsString();
+                assertTrue(responseBody.contains("No valid crumb"));
             }
         }
     }
