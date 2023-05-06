@@ -34,7 +34,6 @@ import hudson.security.csrf.CrumbIssuerDescriptor;
 import jenkins.model.Jenkins;
 import jenkins.security.HexStringConfidentialKey;
 import net.sf.json.JSONObject;
-import org.acegisecurity.Authentication;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
@@ -42,6 +41,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.springframework.security.core.Authentication;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -411,7 +411,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         HttpServletRequest req = (HttpServletRequest) request;
         StringBuilder builder = new StringBuilder();
 
-        Authentication a = Jenkins.getAuthentication();
+        Authentication a = Jenkins.getAuthentication2();
         builder.append(a.getName());
         builder.append(';');
 
