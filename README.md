@@ -18,6 +18,10 @@ otherwise your instance will not be protected against [CSRF attacks](https://owa
 
 ## Changelog
 
+### Version 2.1.1 (2023-05-06)
+
+- Update Jenkins core requirements and some minor cleanup
+
 ### Version 2.1.0 (2019-12-19)
 
 - Add compatibility for JCasC ([JENKINS-60523](https://issues.jenkins-ci.org/browse/JENKINS-60523))
