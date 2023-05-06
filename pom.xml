@@ -12,15 +12,6 @@
   <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
 
-  <properties>
-    <revision>2.1.1</revision>
-    <changelist>-SNAPSHOT</changelist>
-    <gitHubRepo>jenkinsci/strict-crumb-issuer-plugin</gitHubRepo>
-    <jenkins.version>2.361.4</jenkins.version>
-    <spotbugs.effort>Max</spotbugs.effort>
-    <spotless.check.skip>false</spotless.check.skip>
-  </properties>
-
   <name>Strict Crumb Issuer Plugin</name>
   <description>A configurable CSRF crumb issuer with stricter rules</description>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
@@ -35,9 +26,18 @@
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <url>https://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>
+    <url>https://github.com/${gitHubRepo}</url>
   </scm>
+
+  <properties>
+    <revision>2.1.1</revision>
+    <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/strict-crumb-issuer-plugin</gitHubRepo>
+    <jenkins.version>2.361.4</jenkins.version>
+    <spotbugs.effort>Max</spotbugs.effort>
+    <spotless.check.skip>false</spotless.check.skip>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -49,6 +49,18 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -61,16 +73,4 @@
       <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
-  <dependencies>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 </project>

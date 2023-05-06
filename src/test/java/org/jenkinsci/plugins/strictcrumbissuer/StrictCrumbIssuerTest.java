@@ -23,28 +23,6 @@
  */
 package org.jenkinsci.plugins.strictcrumbissuer;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import hudson.model.User;
-import hudson.security.csrf.CrumbIssuer;
-import hudson.security.csrf.CrumbIssuerDescriptor;
-import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.WithoutJenkins;
-import org.kohsuke.stapler.StaplerRequest;
-import org.mockito.Mockito;
-
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import static org.jenkinsci.plugins.strictcrumbissuer.StrictCrumbIssuer.HEADER_X_FORWARDED_FOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -54,15 +32,33 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.html.DomElement;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.User;
+import hudson.security.csrf.CrumbIssuer;
+import hudson.security.csrf.CrumbIssuerDescriptor;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import jenkins.model.Jenkins;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
+import org.kohsuke.stapler.StaplerRequest;
+import org.mockito.Mockito;
+
 public class StrictCrumbIssuerTest {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
     private static final String[] refererTestSet = {
-            "10.2.3.1",
-            "10.2.3.1,10.20.30.40",
-            "10.2.3.1,10.20.30.41",
-            "10.2.3.3,10.20.30.40,10.20.30.41"
+        "10.2.3.1", "10.2.3.1,10.20.30.40", "10.2.3.1,10.20.30.41", "10.2.3.3,10.20.30.40,10.20.30.41"
     };
 
     @Rule
@@ -145,12 +141,14 @@ public class StrictCrumbIssuerTest {
     }
 
     private void checkSameSource_fullUrl() throws Exception {
-        j.jenkins.setCrumbIssuer(createStrict(Options.NOTHING().withCheckSameSource(true).withCheckOnlyLocalPath(false)));
+        j.jenkins.setCrumbIssuer(
+                createStrict(Options.NOTHING().withCheckSameSource(true).withCheckOnlyLocalPath(false)));
 
         URL url = j.getURL();
 
         JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page1 = (HtmlPage) wc.getPage("http://127.0.0.1:" + url.getPort() + j.contextPath + "/configure?a=b&c=d");
+        HtmlPage page1 =
+                (HtmlPage) wc.getPage("http://127.0.0.1:" + url.getPort() + j.contextPath + "/configure?a=b&c=d");
         String crumb1 = page1.getElementByName("Jenkins-Crumb").getAttribute("value");
         j.submit(page1.getFormByName("config"));
 
@@ -196,12 +194,14 @@ public class StrictCrumbIssuerTest {
     }
 
     private void checkSameSource_onlyLocalPath() throws Exception {
-        j.jenkins.setCrumbIssuer(createStrict(Options.NOTHING().withCheckSameSource(true).withCheckOnlyLocalPath(true)));
+        j.jenkins.setCrumbIssuer(
+                createStrict(Options.NOTHING().withCheckSameSource(true).withCheckOnlyLocalPath(true)));
 
         URL url = j.getURL();
 
         JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page1 = (HtmlPage) wc.getPage("http://127.0.0.1:" + url.getPort() + j.contextPath + "/configure?a=b&c=d");
+        HtmlPage page1 =
+                (HtmlPage) wc.getPage("http://127.0.0.1:" + url.getPort() + j.contextPath + "/configure?a=b&c=d");
         String crumb1 = page1.getElementByName("Jenkins-Crumb").getAttribute("value");
         j.submit(page1.getFormByName("config"));
 
@@ -280,9 +280,10 @@ public class StrictCrumbIssuerTest {
         StaplerRequest request;
 
         // to avoid problem with the spied class
-        Mockito.doReturn(
-                (CrumbIssuerDescriptor<CrumbIssuer>) Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class)
-        ).when(strictCrumbIssuer).getDescriptor();
+        Mockito.doReturn((CrumbIssuerDescriptor<CrumbIssuer>)
+                        Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class))
+                .when(strictCrumbIssuer)
+                .getDescriptor();
 
         // hypothesis, time is November 23, 9:16:23pm (rounded to 9:15)
         // the validity period must be 9:15 - 12:19:59 to ensure at least 3 hours but less than 3h05
@@ -306,9 +307,10 @@ public class StrictCrumbIssuerTest {
         StaplerRequest request;
 
         // to avoid problem with the spied class
-        Mockito.doReturn(
-                (CrumbIssuerDescriptor<CrumbIssuer>) Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class)
-        ).when(strictCrumbIssuer).getDescriptor();
+        Mockito.doReturn((CrumbIssuerDescriptor<CrumbIssuer>)
+                        Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class))
+                .when(strictCrumbIssuer)
+                .getDescriptor();
 
         // hypothesis, time is November 23, 9:16:23pm (will be rounded to 9:15)
         // the validity period must be 9:15 - 12:19:59 to ensure at least 3 hours but less than 3h05
@@ -325,7 +327,8 @@ public class StrictCrumbIssuerTest {
         Mockito.reset(strictCrumbIssuer);
     }
 
-    private void checkAllPossibilitiesForDate(StrictCrumbIssuer strictCrumbIssuer, StaplerRequest request, boolean isAlwaysValid) throws Exception {
+    private void checkAllPossibilitiesForDate(
+            StrictCrumbIssuer strictCrumbIssuer, StaplerRequest request, boolean isAlwaysValid) throws Exception {
         checkCrumbIsValidAt(strictCrumbIssuer, request, "2017-11-23T09:16:23", true);
         // just before
         checkCrumbIsValidAt(strictCrumbIssuer, request, "2017-11-23T09:15:00", true);
@@ -350,7 +353,9 @@ public class StrictCrumbIssuerTest {
         checkCrumbIsValidAt(strictCrumbIssuer, request, "2017-11-13T20:00:00", isAlwaysValid);
     }
 
-    private void checkCrumbIsValidAt(StrictCrumbIssuer strictCrumbIssuer, StaplerRequest request, String dateString, boolean mustBeValid) throws Exception {
+    private void checkCrumbIsValidAt(
+            StrictCrumbIssuer strictCrumbIssuer, StaplerRequest request, String dateString, boolean mustBeValid)
+            throws Exception {
         Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
         long nowHour = date.getTime() / (3600000 / 12);
         Mockito.doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
@@ -491,8 +496,8 @@ public class StrictCrumbIssuerTest {
             Boolean checkOnlyLocalPath,
             Boolean checkSessionMatch,
             Integer hoursValid,
-            Boolean xorMasking
-    ) throws Exception {
+            Boolean xorMasking)
+            throws Exception {
         HtmlPage p = wc.goTo("configureSecurity");
         HtmlForm form = p.getFormByName("config");
         if (checkClientIP != null) {
@@ -569,8 +574,7 @@ public class StrictCrumbIssuerTest {
                 options.checkOnlyLocalPath,
                 options.checkSessionMatch,
                 options.hoursValid,
-                options.xorMasking
-        );
+                options.xorMasking);
     }
 
     private static class Options {

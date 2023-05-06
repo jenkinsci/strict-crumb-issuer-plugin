@@ -30,6 +30,22 @@ import hudson.Util;
 import hudson.model.ModelObject;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.security.csrf.CrumbIssuerDescriptor;
+import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.PostConstruct;
+import javax.annotation.concurrent.GuardedBy;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import jenkins.model.Jenkins;
 import jenkins.security.HexStringConfidentialKey;
 import net.sf.json.JSONObject;
@@ -41,23 +57,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.springframework.security.core.Authentication;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.PostConstruct;
-import javax.annotation.concurrent.GuardedBy;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class StrictCrumbIssuer extends CrumbIssuer {
 
@@ -115,15 +114,15 @@ public class StrictCrumbIssuer extends CrumbIssuer {
      * Greater values are reduced to 24 and smaller increased to 0
      * 0 means no duration validation
      */
-    @SuppressFBWarnings(
-            value = "IS2_INCONSISTENT_SYNC",
-            justification = "The synchronization is done for `md`"
-    )
+    @SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC", justification = "The synchronization is done for `md`")
     private int hoursValid;
 
     public StrictCrumbIssuer(
-            boolean checkClientIP, boolean checkSameSource, boolean checkOnlyLocalPath,
-            boolean checkSessionMatch, int hoursValid,
+            boolean checkClientIP,
+            boolean checkSameSource,
+            boolean checkOnlyLocalPath,
+            boolean checkSessionMatch,
+            int hoursValid,
             boolean xorMasking) {
 
         this.checkClientIP = checkClientIP;
@@ -204,10 +203,14 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         // normally the UI prevent value outside of the boundaries,
         // but we must ensure no javascript manipulation is possible
         if (hoursValid > MAX_HOURS_VALID) {
-            LOGGER.log(Level.WARNING, "The hoursValid (" + hoursValid + ") is too big, it will be reduced to " + MAX_HOURS_VALID);
+            LOGGER.log(
+                    Level.WARNING,
+                    "The hoursValid (" + hoursValid + ") is too big, it will be reduced to " + MAX_HOURS_VALID);
             hoursValid = MAX_HOURS_VALID;
         } else if (hoursValid < TEMPORAL_VALIDATION_DISABLED) {
-            LOGGER.log(Level.WARNING, "The hoursValid (" + hoursValid + ") is too small, the duration validation will be deactivated.");
+            LOGGER.log(
+                    Level.WARNING,
+                    "The hoursValid (" + hoursValid + ") is too small, the duration validation will be deactivated.");
             hoursValid = TEMPORAL_VALIDATION_DISABLED;
         }
     }
@@ -293,7 +296,8 @@ public class StrictCrumbIssuer extends CrumbIssuer {
      * {@inheritDoc}
      */
     @Override
-    public synchronized boolean validateCrumb(@Nonnull ServletRequest request, @Nonnull String salt, @CheckForNull String encodedCrumb) {
+    public synchronized boolean validateCrumb(
+            @Nonnull ServletRequest request, @Nonnull String salt, @CheckForNull String encodedCrumb) {
         if (request instanceof HttpServletRequest) {
             if (encodedCrumb != null) {
                 String crumb = decodeCrumb(encodedCrumb);
@@ -325,9 +329,12 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         return false;
     }
 
-    private boolean isCrumbValid(@Nonnull ServletRequest request, @Nonnull String salt,
-                                 long hours, @Nonnull byte[] actualCrumbBytes,
-                                 @CheckForNull String sourceUrl) {
+    private boolean isCrumbValid(
+            @Nonnull ServletRequest request,
+            @Nonnull String salt,
+            long hours,
+            @Nonnull byte[] actualCrumbBytes,
+            @CheckForNull String sourceUrl) {
         String newCrumb = createCrumb(request, salt, hours, sourceUrl);
 
         // even if the crumb is hex string (currently), we use ASCII to avoid variable length encoding
@@ -383,7 +390,9 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         if (isCheckSameSource()) {
             String referer = req.getHeader(HEADER_REFERER);
             if (referer == null) {
-                LOGGER.log(Level.WARNING, "No referer present in the request, perhaps it is better to check only local path");
+                LOGGER.log(
+                        Level.WARNING,
+                        "No referer present in the request, perhaps it is better to check only local path");
                 return null;
             }
 
@@ -412,8 +421,8 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         }
     }
 
-    private synchronized @Nonnull String createCrumb(@Nonnull ServletRequest request, @Nonnull String salt,
-                                                     long creationTime, @CheckForNull String sourceUrl) {
+    private synchronized @Nonnull String createCrumb(
+            @Nonnull ServletRequest request, @Nonnull String salt, long creationTime, @CheckForNull String sourceUrl) {
         HttpServletRequest req = (HttpServletRequest) request;
         StringBuilder builder = new StringBuilder();
 
@@ -520,8 +529,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
 
     @SuppressFBWarnings(
             value = "NP_NONNULL_RETURN_VIOLATION",
-            justification = "leftPad returns null only if receiving null, which is not the case here"
-    )
+            justification = "leftPad returns null only if receiving null, which is not the case here")
     private static @Nonnull String leftPadWithZeros(@Nonnull String stringToBePadded, int length) {
         return StringUtils.leftPad(stringToBePadded, length, '0');
     }
@@ -529,16 +537,19 @@ public class StrictCrumbIssuer extends CrumbIssuer {
     @Extension
     @Symbol("strict")
     public static final class DescriptorImpl extends CrumbIssuerDescriptor<StrictCrumbIssuer> implements ModelObject {
-        private final static HexStringConfidentialKey CRUMB_SALT = new HexStringConfidentialKey(StrictCrumbIssuer.class, "strictCrumbSalt", 64);
+        private static final HexStringConfidentialKey CRUMB_SALT =
+                new HexStringConfidentialKey(StrictCrumbIssuer.class, "strictCrumbSalt", 64);
 
         public DescriptorImpl() {
-            super(CRUMB_SALT.get(), System.getProperty("hudson.security.csrf.requestfield", CrumbIssuer.DEFAULT_CRUMB_NAME));
+            super(
+                    CRUMB_SALT.get(),
+                    System.getProperty("hudson.security.csrf.requestfield", CrumbIssuer.DEFAULT_CRUMB_NAME));
             load();
         }
 
         @Override
         public String getDisplayName() {
-            return "Strict Crumb Issuer";/* TODO i18n */
+            return "Strict Crumb Issuer"; /* TODO i18n */
         }
 
         @Override
