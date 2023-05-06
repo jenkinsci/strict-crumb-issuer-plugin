@@ -18,6 +18,7 @@
     <gitHubRepo>jenkinsci/strict-crumb-issuer-plugin</gitHubRepo>
     <jenkins.version>2.361.4</jenkins.version>
     <spotbugs.effort>Max</spotbugs.effort>
+    <spotless.check.skip>false</spotless.check.skip>
   </properties>
 
   <name>Strict Crumb Issuer Plugin</name>
