@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2019, CloudBees, Inc.
+ * Copyright (c) 2019-2023, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,6 @@ import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.google.common.net.HttpHeaders;
 import hudson.model.User;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.security.csrf.CrumbIssuerDescriptor;
@@ -46,6 +45,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static org.jenkinsci.plugins.strictcrumbissuer.StrictCrumbIssuer.HEADER_X_FORWARDED_FOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -55,6 +55,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 public class StrictCrumbIssuerTest {
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
     private static final String[] refererTestSet = {
             "10.2.3.1",
@@ -80,7 +82,7 @@ public class StrictCrumbIssuerTest {
     private void checkClientIPFromHeader() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
         HtmlPage p = wc.goTo("configure");
         j.submit(p.getFormByName("config"));
     }
@@ -88,10 +90,10 @@ public class StrictCrumbIssuerTest {
     private void checkHeaderChange() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
         HtmlPage p = wc.goTo("configure");
 
-        wc.removeRequestHeader(HttpHeaders.X_FORWARDED_FOR);
+        wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
         try {
             // The crumb should no longer match if we remove the proxy info
             j.submit(p.getFormByName("config"));
@@ -104,11 +106,11 @@ public class StrictCrumbIssuerTest {
     private void checkProxyIPChanged() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[1]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[1]);
         HtmlPage p = wc.goTo("configure");
 
-        wc.removeRequestHeader(HttpHeaders.X_FORWARDED_FOR);
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[2]);
+        wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[2]);
 
         // The crumb should be the same even if the proxy IP changes
         j.submit(p.getFormByName("config"));
@@ -117,7 +119,7 @@ public class StrictCrumbIssuerTest {
     private void checkProxyIPChain() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[3]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[3]);
         HtmlPage p = wc.goTo("configure");
         j.submit(p.getFormByName("config"));
     }
@@ -128,10 +130,10 @@ public class StrictCrumbIssuerTest {
         j.jenkins.setCrumbIssuer(createStrict(Options.ALL().withCheckClientIP(false)));
 
         JenkinsRule.WebClient wc = j.createWebClient();
-        wc.addRequestHeader(HttpHeaders.X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
         HtmlPage p = wc.goTo("configure");
 
-        wc.removeRequestHeader(HttpHeaders.X_FORWARDED_FOR);
+        wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
         // The crumb should still match if we remove the proxy info
         j.submit(p.getFormByName("config"));
     }
@@ -270,8 +272,6 @@ public class StrictCrumbIssuerTest {
         when(req.getRequestURI()).thenReturn(contextPath + "/configure");
         return req;
     }
-
-    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
     @Test
     public void durationMustBeValid() throws Exception {
@@ -480,7 +480,7 @@ public class StrictCrumbIssuerTest {
         assertEquals(24, currentIssuer().getHoursValid());
     }
 
-    private StrictCrumbIssuer currentIssuer(){
+    private StrictCrumbIssuer currentIssuer() {
         return (StrictCrumbIssuer) j.jenkins.getCrumbIssuer();
     }
 
@@ -495,22 +495,22 @@ public class StrictCrumbIssuerTest {
     ) throws Exception {
         HtmlPage p = wc.goTo("configureSecurity");
         HtmlForm form = p.getFormByName("config");
-        if(checkClientIP != null){
+        if (checkClientIP != null) {
             form.getInputByName("_.checkClientIP").setChecked(checkClientIP);
         }
-        if(checkSameSource != null){
+        if (checkSameSource != null) {
             form.getInputByName("_.checkSameSource").setChecked(checkSameSource);
         }
-        if(checkOnlyLocalPath != null){
+        if (checkOnlyLocalPath != null) {
             form.getInputByName("_.checkOnlyLocalPath").setChecked(checkOnlyLocalPath);
         }
-        if(checkSessionMatch != null){
+        if (checkSessionMatch != null) {
             form.getInputByName("_.checkSessionMatch").setChecked(checkSessionMatch);
         }
-        if(hoursValid != null){
+        if (hoursValid != null) {
             form.getInputByName("_.hoursValid").setValueAttribute("" + hoursValid);
         }
-        if(xorMasking != null){
+        if (xorMasking != null) {
             form.getInputByName("_.xorMasking").setChecked(xorMasking);
         }
         HtmlPage result = j.submit(form);

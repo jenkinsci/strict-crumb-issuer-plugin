@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2018-2023, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.strictcrumbissuer;
 
-import com.google.common.net.HttpHeaders;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.RestrictedSince;
@@ -62,6 +61,9 @@ import java.util.logging.Logger;
 
 public class StrictCrumbIssuer extends CrumbIssuer {
 
+    static final String HEADER_X_FORWARDED_FOR = "X-Forwarded-For";
+    private static final String HEADER_REFERER = "Referer";
+
     private static final int MAX_HOURS_VALID = 24;
     private static final int TEMPORAL_VALIDATION_DISABLED = 0;
 
@@ -80,11 +82,13 @@ public class StrictCrumbIssuer extends CrumbIssuer {
      * Compare X-Forwarded-For header
      */
     private boolean checkClientIP;
+
     /**
      * Compare the page where the token was issued with the request that is made with it after that.<br/>
      * The scope of the check is determined by {@link #checkOnlyLocalPath}
      */
     private boolean checkSameSource;
+
     /**
      * Determine if we check only the local path (all the right parts after the context path) or
      * the full url. <br/>
@@ -92,11 +96,13 @@ public class StrictCrumbIssuer extends CrumbIssuer {
      * Only relevant if the {@link #checkSameSource} is {@code true}
      */
     private boolean checkOnlyLocalPath;
+
     /**
      * Check the session ID between when the crumb is issued and when used.
      * Meaning if the user disconnects, the token is automatically invalidated.
      */
     private boolean checkSessionMatch;
+
     /**
      * Determine if we add 32 random values (=seed) in front and xor them with the real crumb
      * [seed in clear][realCrumb ^ seed]
@@ -132,7 +138,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
     }
 
     @DataBoundConstructor
-    public StrictCrumbIssuer(){
+    public StrictCrumbIssuer() {
         this.checkClientIP = false;
         this.checkSameSource = false;
         this.checkOnlyLocalPath = false;
@@ -174,7 +180,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
     // only set public for JCasC as they do not currently support private methods for PostConstruct
     @Restricted(NoExternalUse.class)
     @PostConstruct
-    public void setup(){
+    public void setup() {
         this.ensureHoursValidIsInBoundaries();
         this.initMessageDigest();
     }
@@ -186,7 +192,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         return this;
     }
 
-    private synchronized void initMessageDigest(){
+    private synchronized void initMessageDigest() {
         try {
             this.md = MessageDigest.getInstance(MD_NAME);
         } catch (NoSuchAlgorithmException e) {
@@ -341,47 +347,47 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         return new Date().getTime() / (MILLIS_PER_HOUR / INCREMENTS_PER_HOUR);
     }
 
-    private @CheckForNull String urlForCreation(@Nonnull HttpServletRequest req){
-        if(isCheckSameSource()){
-            if(isCheckOnlyLocalPath()){
+    private @CheckForNull String urlForCreation(@Nonnull HttpServletRequest req) {
+        if (isCheckSameSource()) {
+            if (isCheckOnlyLocalPath()) {
                 String contextPath = req.getContextPath();
                 String requestURI = req.getRequestURI();
                 if (!requestURI.startsWith(contextPath)) {
-                    LOGGER.log(Level.WARNING,"RequestURI {0} does not start with contextPath", requestURI);
+                    LOGGER.log(Level.WARNING, "RequestURI {0} does not start with contextPath", requestURI);
                 }
 
                 String localPath = requestURI.substring(contextPath.length());
                 String query = req.getQueryString();
-                if(query != null){
+                if (query != null) {
                     localPath += "?" + query;
                 }
 
                 return localPath;
-            }else{
+            } else {
                 String requestUrl = req.getRequestURL().toString();
                 String query = req.getQueryString();
 
                 String url = requestUrl;
-                if(query != null){
+                if (query != null) {
                     url += "?" + query;
                 }
 
                 return url;
             }
-        }else{
+        } else {
             return null;
         }
     }
 
-    private @CheckForNull String urlForValidation(@Nonnull HttpServletRequest req){
-        if(isCheckSameSource()){
-            String referer = req.getHeader(HttpHeaders.REFERER);
-            if(referer == null){
+    private @CheckForNull String urlForValidation(@Nonnull HttpServletRequest req) {
+        if (isCheckSameSource()) {
+            String referer = req.getHeader(HEADER_REFERER);
+            if (referer == null) {
                 LOGGER.log(Level.WARNING, "No referer present in the request, perhaps it is better to check only local path");
                 return null;
             }
 
-            if(isCheckOnlyLocalPath()){
+            if (isCheckOnlyLocalPath()) {
                 URL url;
                 try {
                     url = new URL(referer);
@@ -393,15 +399,15 @@ public class StrictCrumbIssuer extends CrumbIssuer {
                 String pathWithContext = url.getFile();
 
                 if (!pathWithContext.startsWith(contextPath)) {
-                    LOGGER.log(Level.WARNING,"Request path {0} does not start with contextPath", pathWithContext);
+                    LOGGER.log(Level.WARNING, "Request path {0} does not start with contextPath", pathWithContext);
                     return null;
                 }
 
                 return pathWithContext.substring(contextPath.length());
-            }else{
+            } else {
                 return referer;
             }
-        }else{
+        } else {
             return null;
         }
     }
@@ -433,7 +439,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         if (hoursValid == TEMPORAL_VALIDATION_DISABLED) {
             builder.append("0");
         } else {
-            builder.append(Long.toString(creationTime));
+            builder.append(creationTime);
         }
 
         String clearCrumb = builder.toString();
@@ -455,7 +461,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
 
     private String getClientIP(@Nonnull HttpServletRequest req) {
         String defaultAddress = req.getRemoteAddr();
-        String forwarded = req.getHeader(HttpHeaders.X_FORWARDED_FOR);
+        String forwarded = req.getHeader(HEADER_X_FORWARDED_FOR);
         if (forwarded != null) {
             String[] hopList = forwarded.split(",");
             if (hopList.length >= 1) {
@@ -516,7 +522,7 @@ public class StrictCrumbIssuer extends CrumbIssuer {
             value = "NP_NONNULL_RETURN_VIOLATION",
             justification = "leftPad returns null only if receiving null, which is not the case here"
     )
-    private static @Nonnull String leftPadWithZeros(@Nonnull String stringToBePadded, int length){
+    private static @Nonnull String leftPadWithZeros(@Nonnull String stringToBePadded, int length) {
         return StringUtils.leftPad(stringToBePadded, length, '0');
     }
 
