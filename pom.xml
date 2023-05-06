@@ -17,6 +17,7 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/strict-crumb-issuer-plugin</gitHubRepo>
     <jenkins.version>2.361.4</jenkins.version>
+    <spotbugs.effort>Max</spotbugs.effort>
   </properties>
 
   <name>Strict Crumb Issuer Plugin</name>
