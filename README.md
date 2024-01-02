@@ -1,6 +1,9 @@
 # Strict Crumb Issuer plugin
+
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/master/)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/strict-crumb-issuer.svg)](https://plugins.jenkins.io/strict-crumb-issuer)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/strict-crumb-issuer.svg?color=blue)](https://plugins.jenkins.io/strict-crumb-issuer)
+[![GitHub license](https://img.shields.io/github/license/jenkinsci/strict-crumb-issuer-plugin)](https://github.com/jenkinsci/strict-crumb-issuer-plugin/blob/master/LICENSE.md)
 
 ## Description
 
@@ -34,4 +37,6 @@ otherwise your instance will not be protected against [CSRF attacks](https://owa
 
 - First release, as a companion of [Security Advisory for SECURITY-626](https://jenkins.io/security/advisory/2019-07-17/#SECURITY-626)
 
-  
+## License
+
+Licensed under MIT, see [LICENSE](LICENSE.md)

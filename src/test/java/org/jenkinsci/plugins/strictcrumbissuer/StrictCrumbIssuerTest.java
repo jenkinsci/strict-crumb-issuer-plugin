@@ -32,11 +32,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.WebResponse;
-import com.gargoylesoftware.htmlunit.html.DomElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.User;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.security.csrf.CrumbIssuerDescriptor;
@@ -45,6 +40,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import jenkins.model.Jenkins;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -513,7 +513,7 @@ public class StrictCrumbIssuerTest {
             form.getInputByName("_.checkSessionMatch").setChecked(checkSessionMatch);
         }
         if (hoursValid != null) {
-            form.getInputByName("_.hoursValid").setValueAttribute("" + hoursValid);
+            form.getInputByName("_.hoursValid").setValue("" + hoursValid);
         }
         if (xorMasking != null) {
             form.getInputByName("_.xorMasking").setChecked(xorMasking);
