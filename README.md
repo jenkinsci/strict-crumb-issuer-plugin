@@ -1,9 +1,9 @@
 # Strict Crumb Issuer plugin
 
-[![Build Status](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/master/)
+[![Build Status](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/main/badge/icon)](https://ci.jenkins.io/job/Plugins/job/strict-crumb-issuer-plugin/job/main/)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/strict-crumb-issuer.svg)](https://plugins.jenkins.io/strict-crumb-issuer)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/strict-crumb-issuer.svg?color=blue)](https://plugins.jenkins.io/strict-crumb-issuer)
-[![GitHub license](https://img.shields.io/github/license/jenkinsci/strict-crumb-issuer-plugin)](https://github.com/jenkinsci/strict-crumb-issuer-plugin/blob/master/LICENSE.md)
+[![GitHub license](https://img.shields.io/github/license/jenkinsci/strict-crumb-issuer-plugin)](https://github.com/jenkinsci/strict-crumb-issuer-plugin/blob/main/LICENSE.md)
 
 ## Description
 
