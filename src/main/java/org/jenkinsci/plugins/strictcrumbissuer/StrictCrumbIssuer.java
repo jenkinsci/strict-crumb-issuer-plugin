@@ -321,8 +321,13 @@ public class StrictCrumbIssuer extends CrumbIssuer {
                         }
                     }
                 }
-                Level level = Jenkins.getAuthentication2() instanceof AnonymousAuthenticationToken ? Level.FINE : Level.WARNING;
-                LOGGER.log(level, "Invalid crumb found in the request from user " + User.current() + " at path " + req.getPathInfo());
+                Level level = Jenkins.getAuthentication2() instanceof AnonymousAuthenticationToken
+                        ? Level.FINE
+                        : Level.WARNING;
+                LOGGER.log(
+                        level,
+                        "Invalid crumb found in the request from user " + User.current() + " at path "
+                                + req.getPathInfo());
             } else {
                 LOGGER.log(Level.FINER, "No crumb available in the request");
             }
