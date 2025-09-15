@@ -30,6 +30,7 @@ import hudson.Extension;
 import hudson.RestrictedSince;
 import hudson.Util;
 import hudson.model.ModelObject;
+import hudson.model.User;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.security.csrf.CrumbIssuerDescriptor;
 import java.math.BigInteger;
@@ -56,6 +57,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
 public class StrictCrumbIssuer extends CrumbIssuer {
@@ -319,7 +321,8 @@ public class StrictCrumbIssuer extends CrumbIssuer {
                         }
                     }
                 }
-                LOGGER.log(Level.INFO, "Invalid crumb found in the request");
+                Level level = Jenkins.getAuthentication2() instanceof AnonymousAuthenticationToken ? Level.FINE : Level.WARNING;
+                LOGGER.log(level, "Invalid crumb found in the request from user " + User.current() + " at path " + req.getPathInfo());
             } else {
                 LOGGER.log(Level.FINER, "No crumb available in the request");
             }
