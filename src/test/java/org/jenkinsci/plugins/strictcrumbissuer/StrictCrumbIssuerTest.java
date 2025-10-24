@@ -24,11 +24,15 @@
 package org.jenkinsci.plugins.strictcrumbissuer;
 
 import static org.jenkinsci.plugins.strictcrumbissuer.StrictCrumbIssuer.HEADER_X_FORWARDED_FOR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -45,40 +49,45 @@ import org.htmlunit.WebResponse;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest;
-import org.mockito.Mockito;
 
-public class StrictCrumbIssuerTest {
+@WithJenkins
+class StrictCrumbIssuerTest {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
 
-    private static final String[] refererTestSet = {
+    private static final String[] REFERER_TEST_SET = {
         "10.2.3.1", "10.2.3.1,10.20.30.40", "10.2.3.1,10.20.30.41", "10.2.3.3,10.20.30.40,10.20.30.41"
     };
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Issue("JENKINS-3854")
     @Test
-    public void ipFromHeaderIsCorrectlyUsed() throws Exception {
+    void ipFromHeaderIsCorrectlyUsed() throws Exception {
         j.jenkins.setCrumbIssuer(createStrict(Options.NOTHING().withCheckClientIP(true)));
 
-        this.checkClientIPFromHeader();
-        this.checkHeaderChange();
-        this.checkProxyIPChanged();
-        this.checkProxyIPChain();
+        checkClientIPFromHeader();
+        checkHeaderChange();
+        checkProxyIPChanged();
+        checkProxyIPChain();
     }
 
     private void checkClientIPFromHeader() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[0]);
         HtmlPage p = wc.goTo("configure");
         j.submit(p.getFormByName("config"));
     }
@@ -86,27 +95,25 @@ public class StrictCrumbIssuerTest {
     private void checkHeaderChange() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[0]);
         HtmlPage p = wc.goTo("configure");
 
         wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
-        try {
-            // The crumb should no longer match if we remove the proxy info
-            j.submit(p.getFormByName("config"));
-            fail();
-        } catch (FailingHttpStatusCodeException e) {
-            assertEquals(403, e.getStatusCode());
-        }
+
+        // The crumb should no longer match if we remove the proxy info
+        FailingHttpStatusCodeException e =
+                assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(p.getFormByName("config")));
+        assertEquals(403, e.getStatusCode());
     }
 
     private void checkProxyIPChanged() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[1]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[1]);
         HtmlPage p = wc.goTo("configure");
 
         wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[2]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[2]);
 
         // The crumb should be the same even if the proxy IP changes
         j.submit(p.getFormByName("config"));
@@ -115,18 +122,18 @@ public class StrictCrumbIssuerTest {
     private void checkProxyIPChain() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[3]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[3]);
         HtmlPage p = wc.goTo("configure");
         j.submit(p.getFormByName("config"));
     }
 
     @Issue("JENKINS-7518")
     @Test
-    public void proxyCompatibilityMode() throws Exception {
+    void proxyCompatibilityMode() throws Exception {
         j.jenkins.setCrumbIssuer(createStrict(Options.ALL().withCheckClientIP(false)));
 
         JenkinsRule.WebClient wc = j.createWebClient();
-        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, refererTestSet[0]);
+        wc.addRequestHeader(HEADER_X_FORWARDED_FOR, REFERER_TEST_SET[0]);
         HtmlPage p = wc.goTo("configure");
 
         wc.removeRequestHeader(HEADER_X_FORWARDED_FOR);
@@ -135,7 +142,7 @@ public class StrictCrumbIssuerTest {
     }
 
     @Test
-    public void checkSameSource() throws Exception {
+    void checkSameSource() throws Exception {
         checkSameSource_fullUrl();
         checkSameSource_onlyLocalPath();
     }
@@ -160,14 +167,12 @@ public class StrictCrumbIssuerTest {
 
         // the token from page 1 will not work with page 2 as the root url differ
         replaceAllCrumbInPageBy(page2, crumb1);
-        try {
-            j.submit(page2.getFormByName("config"));
-            fail();
-        } catch (FailingHttpStatusCodeException e) {
-            WebResponse response = e.getResponse();
-            String responseBody = response.getContentAsString();
-            assertTrue(responseBody.contains("No valid crumb"));
-        }
+
+        FailingHttpStatusCodeException e =
+                assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(page2.getFormByName("config")));
+        WebResponse response = e.getResponse();
+        String responseBody = response.getContentAsString();
+        assertTrue(responseBody.contains("No valid crumb"));
 
         // same url, second hit
         HtmlPage page2b = wc.goTo("configure?a=b&c=d");
@@ -183,14 +188,11 @@ public class StrictCrumbIssuerTest {
 
         // even page 2 and 3 have the same root url, we also check the query (and rest of the url)
         replaceAllCrumbInPageBy(page3, crumb2);
-        try {
-            j.submit(page3.getFormByName("config"));
-            fail();
-        } catch (FailingHttpStatusCodeException e) {
-            WebResponse response = e.getResponse();
-            String responseBody = response.getContentAsString();
-            assertTrue(responseBody.contains("No valid crumb"));
-        }
+
+        e = assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(page3.getFormByName("config")));
+        response = e.getResponse();
+        responseBody = response.getContentAsString();
+        assertTrue(responseBody.contains("No valid crumb"));
     }
 
     private void checkSameSource_onlyLocalPath() throws Exception {
@@ -225,14 +227,12 @@ public class StrictCrumbIssuerTest {
 
         // we check just the local path of the url
         replaceAllCrumbInPageBy(page3, crumb2);
-        try {
-            j.submit(page3.getFormByName("config"));
-            fail();
-        } catch (FailingHttpStatusCodeException e) {
-            WebResponse response = e.getResponse();
-            String responseBody = response.getContentAsString();
-            assertTrue(responseBody.contains("No valid crumb"));
-        }
+
+        FailingHttpStatusCodeException e =
+                assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(page3.getFormByName("config")));
+        WebResponse response = e.getResponse();
+        String responseBody = response.getContentAsString();
+        assertTrue(responseBody.contains("No valid crumb"));
     }
 
     private void replaceAllCrumbInPageBy(HtmlPage page, String newCrumb) {
@@ -242,7 +242,7 @@ public class StrictCrumbIssuerTest {
     }
 
     @Test
-    public void successiveCrumb_mustBeValidAndDifferent() {
+    void successiveCrumb_mustBeValidAndDifferent() {
         CrumbIssuer crumbIssuer = createStrict(Options.NOTHING());
         checkSuccessiveCrumbMustBeValidAndDifferent(crumbIssuer, false);
 
@@ -274,14 +274,13 @@ public class StrictCrumbIssuerTest {
     }
 
     @Test
-    public void durationMustBeValid() throws Exception {
+    void durationMustBeValid() throws Exception {
         // in the past and also in the future
         StrictCrumbIssuer strictCrumbIssuer = spy(createStrict(Options.NOTHING().withHoursValid(3)));
         StaplerRequest request;
 
         // to avoid problem with the spied class
-        Mockito.doReturn((CrumbIssuerDescriptor<CrumbIssuer>)
-                        Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class))
+        doReturn((CrumbIssuerDescriptor<CrumbIssuer>) Jenkins.get().getDescriptorOrDie(StrictCrumbIssuer.class))
                 .when(strictCrumbIssuer)
                 .getDescriptor();
 
@@ -289,26 +288,25 @@ public class StrictCrumbIssuerTest {
         // the validity period must be 9:15 - 12:19:59 to ensure at least 3 hours but less than 3h05
         Date date = new SimpleDateFormat(DATE_FORMAT).parse("2017-11-23T09:16:23");
         long nowHour = date.getTime() / (3600000 / 12);
-        Mockito.doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
+        doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
 
         request = createMockRequest("/jenkins");
         String crumb = strictCrumbIssuer.getCrumb(request);
-        when(request.getParameter(Mockito.anyString())).thenReturn(crumb);
+        when(request.getParameter(anyString())).thenReturn(crumb);
 
         checkAllPossibilitiesForDate(strictCrumbIssuer, request, false);
 
-        Mockito.reset(strictCrumbIssuer);
+        reset(strictCrumbIssuer);
     }
 
     @Test
-    public void durationIgnored_alwaysValid() throws Exception {
+    void durationIgnored_alwaysValid() throws Exception {
         // in the past and also in the future
         StrictCrumbIssuer strictCrumbIssuer = spy(createStrict(Options.NOTHING().withHoursValid(0)));
         StaplerRequest request;
 
         // to avoid problem with the spied class
-        Mockito.doReturn((CrumbIssuerDescriptor<CrumbIssuer>)
-                        Jenkins.getInstance().getDescriptorOrDie(StrictCrumbIssuer.class))
+        doReturn((CrumbIssuerDescriptor<CrumbIssuer>) Jenkins.get().getDescriptorOrDie(StrictCrumbIssuer.class))
                 .when(strictCrumbIssuer)
                 .getDescriptor();
 
@@ -316,15 +314,15 @@ public class StrictCrumbIssuerTest {
         // the validity period must be 9:15 - 12:19:59 to ensure at least 3 hours but less than 3h05
         Date date = new SimpleDateFormat(DATE_FORMAT).parse("2017-11-23T09:16:23");
         long nowHour = date.getTime() / (3600000 / 12);
-        Mockito.doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
+        doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
 
         request = createMockRequest("/jenkins");
         String crumb = strictCrumbIssuer.getCrumb(request);
-        when(request.getParameter(Mockito.anyString())).thenReturn(crumb);
+        when(request.getParameter(anyString())).thenReturn(crumb);
 
         checkAllPossibilitiesForDate(strictCrumbIssuer, request, true);
 
-        Mockito.reset(strictCrumbIssuer);
+        reset(strictCrumbIssuer);
     }
 
     private void checkAllPossibilitiesForDate(
@@ -358,13 +356,13 @@ public class StrictCrumbIssuerTest {
             throws Exception {
         Date date = new SimpleDateFormat(DATE_FORMAT).parse(dateString);
         long nowHour = date.getTime() / (3600000 / 12);
-        Mockito.doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
+        doReturn(nowHour).when(strictCrumbIssuer).getCurrentHour();
 
         assertEquals(mustBeValid, strictCrumbIssuer.validateCrumb(request));
     }
 
     @Test
-    public void crumbOnlyValidForUniqueUser() throws Exception {
+    void crumbOnlyValidForUniqueUser() throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         j.jenkins.setCrumbIssuer(createStrict(Options.NOTHING()));
 
@@ -381,19 +379,16 @@ public class StrictCrumbIssuerTest {
         HtmlPage barPage = wc.goTo("configure");
         j.submit(barPage.getFormByName("config"));
 
-        try {
-            // submit the form with foo crumb
-            j.submit(fooPage.getFormByName("config"));
-            fail();
-        } catch (FailingHttpStatusCodeException e) {
-            WebResponse response = e.getResponse();
-            String responseBody = response.getContentAsString();
-            assertTrue(responseBody.contains("No valid crumb"));
-        }
+        // submit the form with foo crumb
+        FailingHttpStatusCodeException e =
+                assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(fooPage.getFormByName("config")));
+        WebResponse response = e.getResponse();
+        String responseBody = response.getContentAsString();
+        assertTrue(responseBody.contains("No valid crumb"));
     }
 
     @Test
-    public void crumbOnlyValidForOneSession() throws Exception {
+    void crumbOnlyValidForOneSession() throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
 
         User.getById("foo", true);
@@ -409,37 +404,34 @@ public class StrictCrumbIssuerTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         wc.login("foo");
 
-        HtmlPage p = wc.goTo("configure");
-        String crumb1 = p.getElementByName("Jenkins-Crumb").getAttribute("value");
-        j.submit(p.getFormByName("config"));
+        HtmlPage page1 = wc.goTo("configure");
+        String crumb1 = page1.getElementByName("Jenkins-Crumb").getAttribute("value");
+        j.submit(page1.getFormByName("config"));
 
         wc.goTo("logout");
         wc.login("foo");
 
-        p = wc.goTo("configure");
-        String crumb2 = p.getElementByName("Jenkins-Crumb").getAttribute("value");
-        j.submit(p.getFormByName("config"));
+        HtmlPage page2 = wc.goTo("configure");
+        String crumb2 = page2.getElementByName("Jenkins-Crumb").getAttribute("value");
+        j.submit(page2.getFormByName("config"));
 
         assertEquals(crumb1.equals(crumb2), areEqual);
 
-        replaceAllCrumbInPageBy(p, crumb1);
+        replaceAllCrumbInPageBy(page2, crumb1);
         if (areEqual) {
-            j.submit(p.getFormByName("config"));
+            j.submit(page2.getFormByName("config"));
         } else {
-            try {
-                // submit the form with foo crumb
-                j.submit(p.getFormByName("config"));
-                fail();
-            } catch (FailingHttpStatusCodeException e) {
-                WebResponse response = e.getResponse();
-                String responseBody = response.getContentAsString();
-                assertTrue(responseBody.contains("No valid crumb"));
-            }
+            // submit the form with foo crumb
+            FailingHttpStatusCodeException e =
+                    assertThrows(FailingHttpStatusCodeException.class, () -> j.submit(page2.getFormByName("config")));
+            WebResponse response = e.getResponse();
+            String responseBody = response.getContentAsString();
+            assertTrue(responseBody.contains("No valid crumb"));
         }
     }
 
     @Test
-    public void setupCrumbIssuerInWebUI() throws Exception {
+    void setupCrumbIssuerInWebUI() throws Exception {
         j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
         j.jenkins.setCrumbIssuer(createStrict(Options.NOTHING()));
 
@@ -449,29 +441,29 @@ public class StrictCrumbIssuerTest {
         wc.login("foo");
 
         configureIssuerUsingWebUI(wc, true, null, null, null, null, null);
-        assertEquals(true, currentIssuer().isCheckClientIP());
+        assertTrue(currentIssuer().isCheckClientIP());
         configureIssuerUsingWebUI(wc, false, null, null, null, null, null);
-        assertEquals(false, currentIssuer().isCheckClientIP());
+        assertFalse(currentIssuer().isCheckClientIP());
 
         configureIssuerUsingWebUI(wc, null, true, null, null, null, null);
-        assertEquals(true, currentIssuer().isCheckSameSource());
+        assertTrue(currentIssuer().isCheckSameSource());
         configureIssuerUsingWebUI(wc, null, false, null, null, null, null);
-        assertEquals(false, currentIssuer().isCheckSameSource());
+        assertFalse(currentIssuer().isCheckSameSource());
 
         configureIssuerUsingWebUI(wc, null, null, true, null, null, null);
-        assertEquals(true, currentIssuer().isCheckOnlyLocalPath());
+        assertTrue(currentIssuer().isCheckOnlyLocalPath());
         configureIssuerUsingWebUI(wc, null, null, false, null, null, null);
-        assertEquals(false, currentIssuer().isCheckOnlyLocalPath());
+        assertFalse(currentIssuer().isCheckOnlyLocalPath());
 
         configureIssuerUsingWebUI(wc, null, null, null, true, null, null);
-        assertEquals(true, currentIssuer().isCheckSessionMatch());
+        assertTrue(currentIssuer().isCheckSessionMatch());
         configureIssuerUsingWebUI(wc, null, null, null, false, null, null);
-        assertEquals(false, currentIssuer().isCheckSessionMatch());
+        assertFalse(currentIssuer().isCheckSessionMatch());
 
         configureIssuerUsingWebUI(wc, null, null, null, null, null, true);
-        assertEquals(true, currentIssuer().isXorMasking());
+        assertTrue(currentIssuer().isXorMasking());
         configureIssuerUsingWebUI(wc, null, null, null, null, null, false);
-        assertEquals(false, currentIssuer().isXorMasking());
+        assertFalse(currentIssuer().isXorMasking());
 
         configureIssuerUsingWebUI(wc, null, null, null, null, -3, null);
         assertEquals(0, currentIssuer().getHoursValid());
@@ -524,22 +516,22 @@ public class StrictCrumbIssuerTest {
 
     @Test
     @WithoutJenkins
-    public void checkTheHourValidRange() {
+    void checkTheHourValidRange() {
         // common case
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(1)).getHoursValid(), 1);
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(12)).getHoursValid(), 12);
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(24)).getHoursValid(), 24);
+        assertEquals(1, createStrict(Options.NOTHING().withHoursValid(1)).getHoursValid());
+        assertEquals(12, createStrict(Options.NOTHING().withHoursValid(12)).getHoursValid());
+        assertEquals(24, createStrict(Options.NOTHING().withHoursValid(24)).getHoursValid());
 
         // out of boundaries
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(-1)).getHoursValid(), 0);
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(-10)).getHoursValid(), 0);
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(25)).getHoursValid(), 24);
-        assertEquals(createStrict(Options.NOTHING().withHoursValid(15235)).getHoursValid(), 24);
+        assertEquals(0, createStrict(Options.NOTHING().withHoursValid(-1)).getHoursValid());
+        assertEquals(0, createStrict(Options.NOTHING().withHoursValid(-10)).getHoursValid());
+        assertEquals(24, createStrict(Options.NOTHING().withHoursValid(25)).getHoursValid());
+        assertEquals(24, createStrict(Options.NOTHING().withHoursValid(15235)).getHoursValid());
     }
 
     @Test
     @WithoutJenkins
-    public void checkXorCorrect() throws Exception {
+    void checkXorCorrect() throws Exception {
         checkReversibleXor("abcd", "1234");
         checkReversibleXor("1234567890abcdef", "737af387278abc1e");
 
