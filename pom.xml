@@ -38,17 +38,6 @@
     <spotbugs.effort>Max</spotbugs.effort>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.401.x</artifactId>
-        <version>2675.v1515e14da_7a_6</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.hamcrest</groupId>
