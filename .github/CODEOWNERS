@@ -1,1 +1,2 @@
-* @jenkinsci/strict-crumb-issuer-plugin-developers
+# Limit automatic code review requests to production code changes
+/src/main/ @jenkinsci/strict-crumb-issuer-plugin-developers
