@@ -9,7 +9,7 @@
     <relativePath />
   </parent>
   <artifactId>strict-crumb-issuer</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
 
   <name>Strict Crumb Issuer Plugin</name>
@@ -31,8 +31,7 @@
   </scm>
 
   <properties>
-    <revision>2.1.2</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/strict-crumb-issuer-plugin</gitHubRepo>
     <jenkins.version>2.401.3</jenkins.version>
     <spotbugs.effort>Max</spotbugs.effort>
