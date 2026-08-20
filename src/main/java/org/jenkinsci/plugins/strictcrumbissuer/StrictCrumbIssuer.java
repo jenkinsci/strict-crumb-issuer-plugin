@@ -534,9 +534,6 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         return leftPadWithZeros(stringResult, realCrumb.length());
     }
 
-    @SuppressFBWarnings(
-            value = "NP_NONNULL_RETURN_VIOLATION",
-            justification = "leftPad returns null only if receiving null, which is not the case here")
     private static @NonNull String leftPadWithZeros(@NonNull String stringToBePadded, int length) {
         if (stringToBePadded.length() >= length) {
             return stringToBePadded;
