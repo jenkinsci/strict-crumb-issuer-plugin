@@ -50,7 +50,6 @@ import javax.servlet.http.HttpServletRequest;
 import jenkins.model.Jenkins;
 import jenkins.security.HexStringConfidentialKey;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -535,11 +534,11 @@ public class StrictCrumbIssuer extends CrumbIssuer {
         return leftPadWithZeros(stringResult, realCrumb.length());
     }
 
-    @SuppressFBWarnings(
-            value = "NP_NONNULL_RETURN_VIOLATION",
-            justification = "leftPad returns null only if receiving null, which is not the case here")
     private static @NonNull String leftPadWithZeros(@NonNull String stringToBePadded, int length) {
-        return StringUtils.leftPad(stringToBePadded, length, '0');
+        if (stringToBePadded.length() >= length) {
+            return stringToBePadded;
+        }
+        return "0".repeat(length - stringToBePadded.length()) + stringToBePadded;
     }
 
     @Extension
